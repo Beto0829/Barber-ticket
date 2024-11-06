@@ -3,7 +3,7 @@ import { db, doc, getDoc, updateDoc, arrayUnion, setDoc } from './firebase_confi
 import { Button } from '@/components/ui/button'; // Componentes UI
 import { Input } from '@/components/ui/input'; // Componentes UI
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Componentes UI
-import { Sun, Moon, FileText, CheckCircle, User, Scissors, Clock, Users } from 'lucide-react'; // Iconos
+import { Sun, Moon, CheckCircle, User, Scissors, Clock, Users } from 'lucide-react'; // Iconos
 
 interface Ticket {
   nombre: string;

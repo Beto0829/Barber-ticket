@@ -38,7 +38,7 @@ export default function TicketPage() {
   // Obtener el total de clientes atendidos desde Firestore (historial)
   useEffect(() => {
     const fetchClientesAtendidos = async () => {
-      const currentDate = new Date().toISOString().split('T')[0]; // Obtener la fecha actual en formato YYYY-MM-DD
+      const currentDate = new Date().toISOString().split('T')[0];
       const historialDocRef = doc(db, 'Turns', 'HistorialTickets');
       const docSnap = await getDoc(historialDocRef);
 
@@ -46,6 +46,7 @@ export default function TicketPage() {
         const existingData = docSnap.data();
         if (existingData && existingData[currentDate]) {
           setClientesAtendidos(existingData[currentDate].totalClientesAtendidos || 0);
+          console.log(clientesAtendidos)
         }
       }
     };
@@ -56,21 +57,32 @@ export default function TicketPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (nombre.trim() === '') return;
-
+  
     const now = new Date();
     const expiracion = new Date(now.getTime() + 14 * 60 * 60 * 1000); // 14 horas de expiración
-
+  
     const newTicket: Ticket = {
       nombre,
       numero: nextNumber,
-      expiracion: expiracion.toISOString(), // Convertimos la fecha a formato ISO
+      expiracion: expiracion.toISOString(),
     };
-
-    // Actualiza el array de tickets en el estado
-    setTickets([...tickets, newTicket]);
-    setNextNumber(nextNumber + 1);
-    setNombre(''); // Limpiamos el input después de generar el ticket
+  
+    try {
+      // Actualiza el array de tickets en Firestore, agregando solo el nuevo ticket
+      const ticketDocRef = doc(db, 'Turns', 'Tickets');
+      await updateDoc(ticketDocRef, {
+        tickets: arrayUnion(newTicket),
+      });
+  
+      // Actualiza el estado local con el nuevo ticket
+      setTickets([...tickets, newTicket]);
+      setNextNumber(nextNumber + 1);
+      setNombre(''); // Limpiamos el input después de generar el ticket
+    } catch (error) {
+      console.error("Error al guardar el ticket en Firestore:", error);
+    }
   };
+  
 
   const handleTicketComplete = async (ticket: Ticket) => {
     // Crear una copia del ticket para historial
@@ -125,95 +137,96 @@ export default function TicketPage() {
     setTickets(updatedTickets);
   };
 
-  return (
-    <div className="min-h-screen w-full bg-background text-foreground">
-      <div className="relative">
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-screen">
-          {/* Botón de Cerrar Sesión */}
-          <div className="absolute right-4 top-4 z-20 flex space-x-2">
-            <Button 
-              variant="outline"
-              className="bg-white/20 hover:bg-white/30 text-foreground"
-            >
-              Cerrar Sesión
-            </Button>
-          </div>
+ return (
+  <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+    <div className="relative w-full max-w-md px-4 py-12">
+      
+      {/* Botón de Cerrar Sesión */}
+      <div className="absolute top-4 right-4">
+        <Button 
+          variant="outline"
+          className="bg-white/20 hover:bg-white/30 text-foreground"
+        >
+          Cerrar Sesión
+        </Button>
+      </div>
 
-          {/* Contenido Principal */}
-          <div className="w-full max-w-sm mx-auto space-y-8">
-            {/* Logo */}
-            <div className="flex justify-center">
-              <img
-                src="/logo.png"
-                alt="EuryBarber Logo"
-                className="w-32 h-32 object-contain"
-              />
+      {/* Contenido Principal */}
+      <div className="space-y-8 text-center">
+        
+        {/* Logo */}
+        <div className="flex justify-center">
+          <img
+            src="/logo.png"
+            alt="EuryBarber Logo"
+            className="w-32 h-32 object-contain"
+          />
+        </div>
+
+        {/* Contador de clientes */}
+        <Card className="bg-black text-white">
+          <CardContent className="flex items-center gap-4 p-4">
+            <Users className="h-8 w-8" />
+            <div>
+              <p className="text-sm">Clientes Atendidos</p>
+              <p className="text-4xl font-bold">{clientesAtendidos}</p>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Contador de clientes */}
-            <Card className="bg-black text-white">
-              <CardContent className="flex items-center gap-4 p-4">
-                <Users className="h-8 w-8" />
-                <div>
-                  <p className="text-sm">Clientes Atendidos</p>
-                  <p className="text-4xl font-bold">{clientesAtendidos}</p>
+        {/* Formulario de reserva */}
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Reserva tu turno</h1>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Tu nombre"
+              className="bg-white"
+            />
+            <Button type="submit" className="w-full bg-black text-white hover:bg-black/90">
+              Reservar
+            </Button>
+          </form>
+        </div>
+
+        {/* Lista de tickets */}
+        <div className="space-y-4">
+          {tickets.map((ticket) => (
+            <Card key={ticket.numero} className="bg-black text-white">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-medium">
+                    Turno #{ticket.numero}
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-white/10"
+                    onClick={() => handleTicketComplete(ticket)}
+                  >
+                    <CheckCircle className="h-4 w-4 text-white" />
+                  </Button>
                 </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-1">
+                <p className="flex items-center text-sm">
+                  <User className="mr-2 h-4 w-4" />
+                  {ticket.nombre}
+                </p>
+                <p className="flex items-center text-sm">
+                  <Clock className="mr-2 h-4 w-4" />
+                  Expira: {new Date(ticket.expiracion).toLocaleString()}
+                </p>
               </CardContent>
             </Card>
-
-            {/* Formulario de reserva */}
-            <div>
-              <h1 className="text-2xl font-bold mb-4">Reserva tu turno</h1>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Tu nombre"
-                  className="bg-white"
-                />
-                <Button type="submit" className="w-full bg-black text-white hover:bg-black/90">
-                  Reservar
-                </Button>
-              </form>
-            </div>
-
-            {/* Lista de tickets */}
-            <div className="space-y-4">
-              {tickets.map((ticket) => (
-                <Card key={ticket.numero} className="bg-black text-white">
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-medium">
-                        Turno #{ticket.numero}
-                      </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-white/10"
-                        onClick={() => handleTicketComplete(ticket)}
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0 space-y-1">
-                    <p className="flex items-center text-sm">
-                      <User className="mr-2 h-4 w-4" />
-                      {ticket.nombre}
-                    </p>
-                    <p className="flex items-center text-sm">
-                      <Clock className="mr-2 h-4 w-4" />
-                      Expira: {new Date(ticket.expiracion).toLocaleString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
-  )
+  </div>
+);
+
 }

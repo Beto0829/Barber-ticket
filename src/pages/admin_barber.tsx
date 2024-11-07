@@ -194,11 +194,11 @@ export default function TicketPage() {
       
       <div className="relative w-full max-w-md px-4 py-12">
         {/* Botón de Cerrar Sesión */}
-        <div className="absolute top-4 right-4">
+        {/* <div className="absolute top-4 right-4">
           <Button variant="outline" className="bg-white/20 hover:bg-white/30 text-foreground">
             Cerrar Sesión
           </Button>
-        </div>
+        </div> */}
 
         <div className="space-y-8 text-center">
           <div className="flex justify-center">

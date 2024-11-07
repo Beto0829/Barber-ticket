@@ -11,6 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { db, doc, getDoc } from './firebase_config';
+import TicketSearchComponent from "./componente_busqueda"; // Importa el componente
 
 const ADMIN_PIN = '0903'
 
@@ -24,11 +26,11 @@ const heroImages = [
 
 export default function MainPage() {
   const navigate = useNavigate()
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [pin, setPin] = useState(['', '', '', ''])
   const [error, setError] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [nextTicketNumber, setNextTicketNumber] = useState<number | null>(null);
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -37,30 +39,29 @@ export default function MainPage() {
   ]
 
   useEffect(() => {
-    const darkModePreference = localStorage.getItem('darkMode') === 'true'
-    setIsDarkMode(darkModePreference)
-    if (darkModePreference) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('darkMode', isDarkMode.toString())
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [isDarkMode])
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length)
     }, 5000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      const ticketDocRef = doc(db, 'Turns', 'Tickets');
+      const docSnap = await getDoc(ticketDocRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data && Array.isArray(data.tickets)) {
+          const allTicketNumbers = data.tickets.map((ticket: any) => ticket.numero);
+          const nextTicket = Math.min(...allTicketNumbers);
+          setNextTicketNumber(nextTicket);
+        }
+      }
+    };
+
+    fetchTickets();
+  }, []);
 
   const handlePinChange = (index: number, value: string) => {
     if (value.length > 1) value = value[0]
@@ -78,11 +79,9 @@ export default function MainPage() {
         const enteredPin = newPin.join('')
         if (enteredPin === ADMIN_PIN) {
           sessionStorage.setItem('authMessage', 'codigoValido')
-
           setTimeout(() => {
             sessionStorage.removeItem('authMessage')
-          }, 1800000) // Elimina el mensaje de autenticación después de 30 minutos
-
+          }, 1800000)
           setIsLoginOpen(false)
           navigate('/admin')
         } else if (enteredPin.length === 4) {
@@ -131,6 +130,9 @@ export default function MainPage() {
         
         <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-screen">
           <div className="absolute right-4 top-4 z-20 flex space-x-2">
+            <div className="ml-4">
+              <TicketSearchComponent />
+            </div>
             <Button 
               variant="outline"
               onClick={() => setIsLoginOpen(true)}
@@ -152,6 +154,17 @@ export default function MainPage() {
             <p className="mt-3 text-base text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl">
               Descubre el arte de la barbería en nuestro exclusivo salón.
             </p>
+            
+            {nextTicketNumber !== null && (
+              <div className="mt-4 p-4 bg-white/10 text-white border border-gray-300 rounded-lg shadow-lg text-center max-w-md mx-auto backdrop-blur-sm">
+                <h2 className="text-2xl font-semibold text-gray-100">
+                  Turno Actual:
+                </h2>
+                <p className="text-4xl font-bold text-red-500 mt-2">
+                  {nextTicketNumber}
+                </p>
+              </div>
+            )}
           </div>
           
           <div className="mt-8 flex justify-center space-x-4">

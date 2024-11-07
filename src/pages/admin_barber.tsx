@@ -3,7 +3,7 @@ import { db, doc, getDoc, updateDoc, arrayUnion, setDoc } from './firebase_confi
 import { Button } from '@/components/ui/button'; // Componentes UI
 import { Input } from '@/components/ui/input'; // Componentes UI
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Componentes UI
-import { Sun, Moon, CheckCircle, User, Scissors, Clock, Users } from 'lucide-react'; // Iconos
+import {CheckCircle, User, Clock, Users } from 'lucide-react'; // Iconos
 
 interface Ticket {
   nombre: string;
@@ -16,7 +16,6 @@ export default function TicketPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [nextNumber, setNextNumber] = useState(1);
   const [clientesAtendidos, setClientesAtendidos] = useState(0); // Estado para el total de clientes atendidos
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Cargar los tickets desde Firestore
   useEffect(() => {
@@ -128,88 +127,86 @@ export default function TicketPage() {
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="relative w-full">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="absolute right-0 top-0 z-10 bg-background"
-          >
-            {isDarkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-slate-700" />}
-          </Button>
-        </div>
-
-        <div className="flex flex-col items-center justify-center space-y-8 py-8">
-          <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Leonardo_Kino_XL_Logo_de_barberia_que_contenga_el_nombre_EuryB_3-uV4aYQ7Rdk94H7MLisfjU2JVdJju1Q.jpg"
-              alt="Barberia Logo"
-              className="object-contain w-full h-full"
-              loading="lazy"
-            />
+      <div className="relative">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-screen">
+          {/* Botón de Cerrar Sesión */}
+          <div className="absolute right-4 top-4 z-20 flex space-x-2">
+            <Button 
+              variant="outline"
+              className="bg-white/20 hover:bg-white/30 text-foreground"
+            >
+              Cerrar Sesión
+            </Button>
           </div>
 
-          <Card className="w-full max-w-sm bg-primary text-primary-foreground">
-            <CardContent className="flex items-center justify-center space-x-4 py-6">
-              <Users className="h-8 w-8" />
-              <div className="text-center">
-                <p className="text-sm font-medium">Clientes Atendidos</p>
-                <p className="text-4xl font-bold tabular-nums">{clientesAtendidos}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Reserva tu turno</h1>
+          {/* Contenido Principal */}
+          <div className="w-full max-w-sm mx-auto space-y-8">
+            {/* Logo */}
+            <div className="flex justify-center">
+              <img
+                src="/logo.png"
+                alt="EuryBarber Logo"
+                className="w-32 h-32 object-contain"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="mb-8">
-              <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
+            {/* Contador de clientes */}
+            <Card className="bg-black text-white">
+              <CardContent className="flex items-center gap-4 p-4">
+                <Users className="h-8 w-8" />
+                <div>
+                  <p className="text-sm">Clientes Atendidos</p>
+                  <p className="text-4xl font-bold">{clientesAtendidos}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Formulario de reserva */}
+            <div>
+              <h1 className="text-2xl font-bold mb-4">Reserva tu turno</h1>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                   type="text"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Tu nombre"
-                  className="flex-grow"
+                  className="bg-white"
                 />
-                <Button type="submit" className="w-full sm:w-auto">
+                <Button type="submit" className="w-full bg-black text-white hover:bg-black/90">
                   Reservar
                 </Button>
-              </div>
-            </form>
+              </form>
+            </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Lista de tickets */}
+            <div className="space-y-4">
               {tickets.map((ticket) => (
-                <Card key={ticket.numero} className="bg-primary text-primary-foreground relative">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2 hover:bg-primary-foreground/20"
-                    onClick={() => handleTicketComplete(ticket)}
-                    title="Marcar como atendido"
-                  >
-                    <CheckCircle className="h-5 w-5 text-foreground" />
-                  </Button>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Turno #{ticket.numero}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1">
-                      <p className="flex items-center text-sm">
-                        <User className="mr-2 h-4 w-4" />
-                        {ticket.nombre}
-                      </p>
-                      <p className="flex items-center text-sm">
-                        <Clock className="mr-2 h-4 w-4" />
-                        Expira: {new Date(ticket.expiracion).toLocaleString()}
-                      </p>
-                      <p className="flex items-center text-sm">
-                        <Scissors className="mr-2 h-4 w-4" />
-                        Corte: TBD
-                      </p>
+                <Card key={ticket.numero} className="bg-black text-white">
+                  <CardHeader className="p-4 pb-2">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-lg font-medium">
+                        Turno #{ticket.numero}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-white/10"
+                        onClick={() => handleTicketComplete(ticket)}
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
                     </div>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-1">
+                    <p className="flex items-center text-sm">
+                      <User className="mr-2 h-4 w-4" />
+                      {ticket.nombre}
+                    </p>
+                    <p className="flex items-center text-sm">
+                      <Clock className="mr-2 h-4 w-4" />
+                      Expira: {new Date(ticket.expiracion).toLocaleString()}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -218,5 +215,5 @@ export default function TicketPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

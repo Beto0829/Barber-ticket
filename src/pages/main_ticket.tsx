@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -132,17 +132,6 @@ export default function MainPage() {
         <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-screen">
           <div className="absolute right-4 top-4 z-20 flex space-x-2">
             <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="bg-white/20 hover:bg-white/30"
-            >
-              {isDarkMode ? 
-                <Sun className="h-5 w-5 text-yellow-500" /> : 
-                <Moon className="h-5 w-5 text-slate-700" />
-              }
-            </Button>
-            <Button 
               variant="outline"
               onClick={() => setIsLoginOpen(true)}
               className="bg-white/20 hover:bg-white/30 text-white"
@@ -153,7 +142,7 @@ export default function MainPage() {
           
           <div className="text-center">
             <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Leonardo_Kino_XL_Logo_de_barberia_que_contenga_el_nombre_EuryB_3-uV4aYQ7Rdk94H7MLisfjU2JVdJju1Q.jpg"
+              src="./logo.png"
               alt="EuryBarber Logo"
               className="mx-auto w-40 h-40 object-contain mb-8"
             />
